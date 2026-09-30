@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>LoveWork 💖 V16 Polished - Real-time</title>
+<meta name="theme-color" content="#FF4D6D">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Pacifico&display=swap" rel="stylesheet">
+<style>
+body{font-family:Outfit,sans-serif;background:linear-gradient(135deg,#FFF0F3 0%,#FFE5EC 50%,#FFC2D1 100%);min-height:100vh;color:#4A1A2A;overflow-x:hidden}
+.pacifico{font-family:Pacifico,cursive}
+.glass{background:rgba(255,255,255,.92);backdrop-filter:blur(20px);border:1px solid rgba(255,143,171,.18);box-shadow:0 8px 32px rgba(255,77,109,.08)}
+.glass-strong{background:rgba(255,255,255,.96);backdrop-filter:blur(24px);border:1px solid rgba(255,143,171,.25);box-shadow:0 12px 40px rgba(255,77,109,.12)}
+.bob{animation:bob 3s ease-in-out infinite}@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.page{display:none}.page.active{display:block;animation:pageIn .35s cubic-bezier(.16,1,.3,1)}@keyframes pageIn{from{opacity:0;transform:translateY(20px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+.nav-btn{transition:all .2s cubic-bezier(.16,1,.3,1)}.nav-btn.active{color:#FF4D6D;transform:translateY(-2px)}.nav-btn.active .nav-icon{background:#FF4D6D;color:white;box-shadow:0 4px 12px rgba(255,77,109,.3)}
+.app-card{transition:all .25s cubic-bezier(.16,1,.3,1)}.app-card:active{transform:scale(.96)}.app-card:hover{transform:translateY(-2px);box-shadow:0 12px 24px rgba(255,77,109,.15)}
+.chat-bubble{max-width:78%;padding:12px 16px;border-radius:20px;font-size:14px;line-height:1.4;word-break:break-word;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.chat-me{background:linear-gradient(135deg,#FF4D6D,#FF8FAB);color:white;border-bottom-right-radius:6px}
+.chat-them{background:white;border-bottom-left-radius:6px}
+.pulse-dot{animation:pulse 2s infinite}@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.7;transform:scale(1.1)}}
+.notif-popup{position:fixed;top:70px;right:10px;z-index:9998;animation:slideIn .45s cubic-bezier(.16,1,.3,1)}@keyframes slideIn{from{transform:translateX(110%) scale(.9);opacity:0}to{transform:translateX(0) scale(1);opacity:1}}
+.horny-glow{box-shadow:0 0 0 2px rgba(255,77,109,.15),0 8px 24px rgba(255,77,109,.2);border:1.5px solid #FF4D6D}
+.game-bubble{background:linear-gradient(135deg,#1a1a1a,#2a2a2a);color:white;border-radius:16px;padding:12px 16px}
+.shimmer{background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent);background-size:200% 100%;animation:shimmer 2s infinite}@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+.float{position:fixed;pointer-events:none;z-index:9999;animation:floatUp 4s linear forwards}@keyframes floatUp{0%{transform:translateY(110vh) rotate(0) scale(.5);opacity:0}10%{opacity:1}100%{transform:translateY(-20vh) rotate(360deg) scale(1.2);opacity:0}}
+.calendar-day{transition:all .15s} .calendar-day:active{transform:scale(.9)}
+.calendar-day.disabled{opacity:.25;pointer-events:none;background:#f3f3f3}
+.calendar-day.today{background:#FF4D6D;color:white;box-shadow:0 4px 12px rgba(255,77,109,.3);font-weight:700}
+.calendar-day.selected{background:black;color:white;transform:scale(1.05)}
+.calendar-day.has-date{position:relative} .calendar-day.has-date::after{content:'';position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:4px;height:4px;background:#FF4D6D;border-radius:50%}
+</style>
+<script>
+// CONFIG - YOUR KEYS BAKED IN ✅
+const SUPABASE_URL = 'https://xjvsaokropaxiduytcju.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhqdnNhb2tyb3BheGlkdXl0Y2p1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg1NzU2MjgsImV4cCI6MjEwNDE1MTYyOH0.hoirVkhWGnB5UgFD6HC2M7a1SX5CxTts6fs5CCOBMss';
+</script>
+</head>
+<body class="pb-[90px]">
+<div id="floatBox"></div>
+<div id="notifPopupContainer"></div>
+
+<!-- PIN - Original kept polished -->
+<div id="pinLock" class="fixed inset-0 z-[200] bg-gradient-to-br from-[#FFF0F3] via-[#FF8FAB] to-[#FF4D6D] flex flex-col items-center justify-center p-6">
+<div class="text-7xl bob">🧸💖</div>
+<h2 class="pacifico text-4xl mt-4 text-white drop-shadow-lg">LoveWork V16</h2>
+<p class="text-sm text-white/90 mt-2">Polished • Real-time • Original #FF4D6D</p>
+<div id="pinSetup" class="hidden mt-6 w-full max-w-[300px]">
+<input id="newPin" type="password" inputmode="numeric" maxlength="4" placeholder="Set 4-digit PIN" class="w-full mt-2 text-center text-2xl tracking-[0.6em] p-4 rounded-[20px] bg-white/90 border-0 shadow-xl">
+<input id="newPin2" type="password" inputmode="numeric" maxlength="4" placeholder="Confirm PIN" class="w-full mt-2 text-center text-2xl tracking-[0.6em] p-3 rounded-[20px] bg-white/80 border-0">
+<button onclick="setPin()" class="w-full mt-3 py-3 rounded-2xl bg-black text-white font-bold shadow-xl">Set PIN & Enter 🔒</button>
+</div>
+<div id="pinEnter" class="mt-6 w-full max-w-[300px]">
+<div class="flex gap-2 justify-center" id="pinDots"></div>
+<div class="grid grid-cols-3 gap-3 mt-6">
+<button onclick="pressPin('1')" class="h-14 rounded-2xl bg-white/90 font-bold text-xl shadow">1</button>
+<button onclick="pressPin('2')" class="h-14 rounded-2xl bg-white/90 font-bold text-xl shadow">2</button>
+<button onclick="pressPin('3')" class="h-14 rounded-2xl bg-white/90 font-bold text-xl shadow">3</button>
+<button onclick="pressPin('4')" class="h-14 rounded-2xl bg-white/90 font-bold text-xl shadow">4</button>
+<button onclick="pressPin('5')" class="h-14 rounded-2xl bg-white/90 font-bold text-xl shadow">5</button>
+<button onclick="pressPin('6')" class="h-14 rounded-2xl bg-white/90 font-bold text-xl shadow">6</button>
+<button onclick="pressPin('7')" class="h-14 rounded-2xl bg-white/90 font-bold text-xl shadow">7</button>
+<button onclick="pressPin('8')" class="h-14 rounded-2xl bg-white/90 font-bold text-xl shadow">8</button>
+<button onclick="pressPin('9')" class="h-14 rounded-2xl bg-white/90 font-bold text-xl shadow">9</button>
+<button onclick="clearPin()" class="h-14 rounded-2xl bg-white/60 text-xs">Clear</button>
+<button onclick="pressPin('0')" class="h-14 rounded-2xl bg-white/90 font-bold text-xl shadow">0</button>
+<button onclick="deletePin()" class="h-14 rounded-2xl bg-white/60">⌫</button>
+</div>
+<button onclick="resetPin()" class="text-[11px] text-white/70 mt-4 underline">Forgot PIN? Reset</button>
+</div>
+</div>
+
+<header class="sticky top-0 z-40 glass-strong px-3 py-3 flex justify-between items-center">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-gradient-to-br from-[#FF4D6D] to-[#FF8FAB] flex items-center justify-center text-white bob shadow-lg">🧸</div>
+<div><h1 class="pacifico text-[17px] leading-none">LoveWork</h1><p class="text-[10px] opacity-60 flex items-center gap-1.5 mt-0.5"><span id="connDot" class="w-2 h-2 rounded-full bg-gray-400 pulse-dot"></span><span id="connText">polished • real-time</span></p></div>
+</div>
+<div class="flex gap-1.5 items-center">
+<button onclick="navigateTo('notifications')" class="relative w-9 h-9 rounded-full bg-white border flex items-center justify-center text-sm shadow-sm">🔔<span id="notifBadge" class="hidden absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center font-bold shadow">0</span></button>
+<button onclick="navigateTo('pair')" class="w-9 h-9 rounded-full bg-[#FF4D6D] text-white flex items-center justify-center text-sm font-bold shadow-lg shadow-pink-200">🔗</button>
+<button onclick="toggleSettings()" class="w-9 h-9 rounded-full bg-white border flex items-center justify-center text-sm shadow-sm">⚙️</button>
+<button onclick="lockApp()" class="w-9 h-9 rounded-full bg-white border text-sm shadow-sm">🔒</button>
+</div>
+</header>
+
+<div id="set" class="hidden fixed top-[62px] right-2 z-[100] w-[92%] max-w-[360px] glass-strong rounded-[24px] p-5 shadow-2xl max-h-[80vh] overflow-y-auto">
+<div class="flex justify-between items-center"><h3 class="font-bold text-sm">Settings ⚙️ Polished</h3><button onclick="toggleSettings()" class="w-8 h-8 rounded-full bg-white border text-xs shadow-sm">✕</button></div>
+<div class="mt-4 p-4 rounded-[16px] bg-gradient-to-br from-[#FF4D6D] to-[#FF8FAB] text-white shadow-lg">
+<p class="text-xs font-bold">V16 Polished • Permanent Pair • Real-time</p>
+<p class="text-[11px] opacity-90 mt-1">Original theme #FF4D6D • No WhatsApp • Simple code</p>
+<div id="pairingStatusSettings" class="mt-3 p-2.5 rounded-xl bg-white/20 text-[11px] text-center backdrop-blur">Checking...</div>
+<button onclick="navigateTo('pair');toggleSettings()" class="w-full mt-3 py-2.5 rounded-xl bg-black text-white text-xs font-bold shadow">Open Pair Page 🔗</button>
+</div>
+<div class="mt-4 p-4 rounded-[16px] bg-white/70">
+<p class="text-xs font-bold">Your Name</p><input id="myName" class="w-full mt-1.5 px-3 py-2.5 rounded-xl bg-white border text-sm shadow-sm">
+<p class="text-xs font-bold mt-3">Your WhatsApp (optional)</p><input id="myWhatsAppInput" class="w-full mt-1.5 px-3 py-2.5 rounded-xl bg-white border text-sm shadow-sm" placeholder="+254...">
+<p class="text-xs font-bold mt-3">Partner Name</p><input id="partnerName" class="w-full mt-1.5 px-3 py-2.5 rounded-xl bg-white border text-sm shadow-sm">
+<button onclick="saveNames()" class="w-full mt-3 py-2.5 rounded-xl bg-[#FF4D6D] text-white font-bold text-xs shadow-lg shadow-pink-200">Save Names 💕</button>
+<button onclick="requestNotifPermission()" class="w-full mt-2 py-2.5 rounded-xl bg-black text-white font-bold text-xs shadow">Enable Device Popups 🔔📱</button>
+<p class="text-[10px] opacity-50 mt-2 text-center">Popups: in-app + browser + vibration • Works even when app in background</p>
+</div>
+</div>
+
+<main class="max-w-[500px] mx-auto px-3 mt-4">
+
+<div id="page-home" class="page active">
+<div class="glass-strong rounded-[24px] p-5 shadow-xl">
+<div class="flex justify-between items-start"><div><h2 class="pacifico text-2xl">Hi, <span id="homeName">love</span> 🧸</h2><div class="mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#FF4D6D] text-white text-[11px] font-bold shadow-lg shadow-pink-200"><span class="w-2 h-2 bg-white rounded-full pulse-dot"></span>Permanent • Real-time • V16 Polished</div></div><div class="text-5xl bob">💖</div></div>
+<div id="pairingStatusHome" class="mt-4 p-3 rounded-[14px] bg-white/60 text-xs text-center border">Checking your permanent pair...</div>
+<div id="recentNotif" class="mt-3 p-3 rounded-[14px] bg-white/60 text-xs hidden border-l-4 border-[#FF4D6D]"></div>
+<button onclick="navigateTo('pair')" class="w-full mt-4 py-3.5 rounded-[14px] bg-gradient-to-r from-[#FF4D6D] to-[#FF8FAB] text-white font-bold text-sm shadow-lg shadow-pink-200">🔗 Open Pair Page — Simple Code, Permanent</button>
+</div>
+<div class="mt-5 grid grid-cols-2 gap-3">
+<button onclick="navigateTo('chat')" class="app-card glass-strong rounded-[18px] p-4 text-left"><div class="w-10 h-10 rounded-full bg-[#FF4D6D] text-white flex items-center justify-center text-sm shadow">💬</div><p class="font-bold text-[13px] mt-3">Chat with Love</p><p class="text-[11px] opacity-60">Real-time + Popups</p></button>
+<button onclick="navigateTo('pair')" class="app-card glass-strong rounded-[18px] p-4 text-left border-[1.5px] border-pink-300"><div class="w-10 h-10 rounded-full bg-[#FF4D6D] text-white flex items-center justify-center text-sm shadow">🔗</div><p class="font-bold text-[13px] mt-3">Pair — Permanent</p><p class="text-[11px] opacity-60">Simple code, no WA</p></button>
+<button onclick="navigateTo('dates')" class="app-card glass-strong rounded-[18px] p-4 text-left"><div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-white flex items-center justify-center text-sm shadow">🌹</div><p class="font-bold text-[13px] mt-3">Book Date</p><p class="text-[11px] opacity-60">No past dates • Real-time</p></button>
+<button onclick="navigateTo('horny')" class="app-card glass-strong rounded-[18px] p-4 text-left horny-glow"><div class="w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-pink-600 text-white flex items-center justify-center text-sm shadow">🔥</div><p class="font-bold text-[13px] mt-3">Horny Time 😈</p><p class="text-[11px] opacity-60">Set romance night</p></button>
+<button onclick="navigateTo('games')" class="app-card glass-strong rounded-[18px] p-4 text-left"><div class="w-10 h-10 rounded-full bg-gradient-to-br from-[#FF4D6D] to-[#FF8FAB] text-white flex items-center justify-center text-sm shadow">🎲</div><p class="font-bold text-[13px] mt-3">Nasty Games</p><p class="text-[11px] opacity-60">Real-time chat games</p></button>
+<button onclick="navigateTo('notifications')" class="app-card glass-strong rounded-[18px] p-4 text-left"><div class="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center text-sm shadow">🔔</div><p class="font-bold text-[13px] mt-3">Inbox</p><p class="text-[11px] opacity-60">Popups + Clear works</p></button>
+</div>
+</div>
+
+<div id="page-pair" class="page">
+<div class="flex items-center gap-3 mb-4"><button onclick="navigateTo('home')" class="w-9 h-9 rounded-full glass-strong shadow-sm">←</button><h2 class="font-bold">Pair 💕 Permanent</h2><span class="text-[10px] px-2.5 py-1 rounded-full bg-green-100 text-green-700 font-bold">Real-time</span></div>
+<div id="pairContainer"></div>
+</div>
+
+<div id="page-chat" class="page">
+<div class="flex items-center gap-3 mb-4"><button onclick="navigateTo('home')" class="w-9 h-9 rounded-full glass-strong shadow-sm">←</button><h2 class="font-bold">Chat 💬</h2><span id="chatStatusDot" class="w-2.5 h-2.5 rounded-full bg-gray-400"></span><span id="chatStatusText" class="text-[11px] opacity-60">Connecting...</span></div>
+<div class="glass-strong rounded-[20px] overflow-hidden flex flex-col h-[68vh] shadow-xl">
+<div class="px-4 py-3 border-b bg-white/60">
+<p class="font-bold text-[13px]" id="chatPartnerName">My Love 💕</p>
+<p id="pairingStatus" class="text-[11px] opacity-60">Real-time • Supabase • Popups enabled</p>
+<p id="typingIndicator" class="text-[11px] text-green-600 hidden font-bold">●●● typing...</p>
+</div>
+<div id="chatMessages" class="flex-1 overflow-y-auto p-4 space-y-3 bg-gradient-to-b from-pink-50/40 to-white/20"></div>
+<div class="p-3 bg-white/80 border-t backdrop-blur">
+<div class="flex gap-2 items-end">
+<textarea id="chatInput" placeholder="Type to your love... real-time + popup" class="flex-1 p-3 rounded-[14px] bg-white border text-sm resize-none h-12 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#FF4D6D]/20"></textarea>
+<button onclick="sendChat()" class="w-12 h-12 rounded-full bg-[#FF4D6D] text-white font-bold shadow-lg shadow-pink-200 flex items-center justify-center">➤</button>
+</div>
+</div>
+</div>
+</div>
+
+<div id="page-dates" class="page">
+<div class="flex items-center gap-3 mb-4"><button onclick="navigateTo('home')" class="w-9 h-9 rounded-full glass-strong shadow-sm">←</button><h2 class="font-bold">Dates 🌹 Polished</h2><span class="text-[10px] px-2 py-1 rounded-full bg-[#FF4D6D] text-white">No past dates</span></div>
+<div class="glass-strong rounded-[20px] p-4 shadow-xl">
+<div class="flex justify-between items-center mb-3"><p class="font-bold text-sm">Select Date 📅</p><p class="text-[11px] opacity-60">Past dates disabled • Real-time</p></div>
+<div id="cal" class="grid grid-cols-7 gap-1.5 text-[11px] text-center"></div>
+<div class="mt-4 p-3 rounded-[14px] bg-white/70 border">
+<p class="text-xs font-bold">Selected: <b id="selDate" class="text-[#FF4D6D]">none</b></p>
+<p id="dateValidation" class="text-[10px] mt-1 hidden"></p>
+</div>
+<input type="time" id="dTime" value="19:00" class="w-full mt-3 p-3 rounded-[14px] bg-white border text-sm shadow-sm">
+<input id="dateTitle" placeholder="Date title (e.g. Dinner at Villa 🌹)" class="w-full mt-3 p-3 rounded-[14px] bg-white border text-sm shadow-sm">
+<button onclick="book()" class="w-full mt-3 py-3.5 rounded-[14px] bg-[#FF4D6D] text-white font-bold text-sm shadow-lg shadow-pink-200">Book Date 🌹 Real-time + Popup</button>
+<div id="upcoming" class="mt-4 space-y-2.5"></div>
+</div>
+</div>
+
+<div id="page-horny" class="page">
+<div class="flex items-center gap-3 mb-4"><button onclick="navigateTo('home')" class="w-9 h-9 rounded-full glass-strong shadow-sm">←</button><h2 class="font-bold">Horny Time 😈🔥</h2><span class="text-[10px] px-2.5 py-1 rounded-full bg-red-100 text-red-600 font-bold">18+ • Private</span></div>
+<div class="glass-strong rounded-[24px] p-5 shadow-xl horny-glow">
+<h3 class="font-bold text-[15px]">Set a Romantic Night 🌙💋</h3>
+<p class="text-[12px] opacity-60 mt-1.5">Partner gets instant device popup 🔔📱 + real-time notification</p>
+<div class="mt-5 grid grid-cols-2 gap-2.5">
+<button onclick="setMood('horny')" id="mood-horny" class="p-3.5 rounded-[14px] bg-gradient-to-br from-red-500 to-pink-500 text-white font-bold text-xs shadow-lg">😈 Horny Now</button>
+<button onclick="setMood('romantic')" id="mood-romantic" class="p-3.5 rounded-[14px] bg-white border font-bold text-xs shadow-sm">💋 Romantic</button>
+<button onclick="setMood('cuddle')" id="mood-cuddle" class="p-3.5 rounded-[14px] bg-white border font-bold text-xs shadow-sm">🥰 Cuddle</button>
+<button onclick="setMood('naughty')" id="mood-naughty" class="p-3.5 rounded-[14px] bg-white border font-bold text-xs shadow-sm">🔥 Naughty</button>
+</div>
+<div class="mt-5">
+<p class="text-xs font-bold">Night Time:</p>
+<div class="flex gap-2.5 mt-2">
+<input type="date" id="hornyDate" class="flex-1 p-3 rounded-[14px] bg-white border text-sm shadow-sm">
+<input type="time" id="hornyTime" value="22:00" class="flex-1 p-3 rounded-[14px] bg-white border text-sm shadow-sm">
+</div>
+<input id="hornyNote" placeholder="Note to partner (e.g. Can't wait for tonight 😈)" class="w-full mt-3 p-3 rounded-[14px] bg-white border text-sm shadow-sm">
+<button onclick="sendHornyInvite()" class="w-full mt-4 py-3.5 rounded-[14px] bg-[#FF4D6D] text-white font-bold text-sm shadow-lg shadow-pink-200">Send Horny Invite 🔥💌 → Popup + Real-time</button>
+</div>
+<div id="hornyInvites" class="mt-5 space-y-2.5"></div>
+</div>
+</div>
+
+<div id="page-games" class="page">
+<div class="flex items-center gap-3 mb-4"><button onclick="navigateTo('home')" class="w-9 h-9 rounded-full glass-strong shadow-sm">←</button><h2 class="font-bold">Nasty Games 🔥😈 Real-time</h2></div>
+
+<div class="glass-strong rounded-[20px] p-4 shadow-xl">
+<h3 class="font-bold text-sm">Start a Game - Partner Gets Invite to Join 🎲</h3>
+<p class="text-[11px] opacity-60 mt-1">Invite → Partner clicks Join → Real-time Q&A with nasty options, both see answers</p>
+<div class="mt-4 grid grid-cols-2 gap-2.5">
+<button onclick="createGameInvite('truth-dare')" class="app-card glass rounded-[14px] p-3 text-left border-[1.5px] border-pink-200"><div class="text-2xl">🎲</div><p class="font-bold text-xs mt-1">Nasty Truth/Dare</p><p class="text-[10px] opacity-60">Invite → Join → Play live</p></button>
+<button onclick="createGameInvite('would-you-rather')" class="app-card glass rounded-[14px] p-3 text-left"><div class="text-2xl">🔥</div><p class="font-bold text-xs mt-1">Would You Rather 18+</p><p class="text-[10px] opacity-60">Real-time choices</p></button>
+<button onclick="createGameInvite('strip-quiz')" class="app-card glass rounded-[14px] p-3 text-left"><div class="text-2xl">😏</div><p class="font-bold text-xs mt-1">Strip Quiz</p><p class="text-[10px] opacity-60">Live Q&A</p></button>
+<button onclick="createGameInvite('fantasy')" class="app-card glass rounded-[14px] p-3 text-left"><div class="text-2xl">🌙</div><p class="font-bold text-xs mt-1">Fantasy Share</p><p class="text-[10px] opacity-60">Share live</p></button>
+</div>
+</div>
+
+<div id="gameInvites" class="mt-4 space-y-2"></div>
+
+<div id="activeGame" class="mt-4 glass-strong rounded-[24px] p-5 shadow-xl hidden border-2 border-[#FF4D6D]">
+<div class="flex justify-between items-center"><h3 class="font-bold text-sm" id="activeGameTitle">Game Active 🎲</h3><span id="activeGameStatus" class="text-[10px] px-2 py-1 rounded-full bg-green-100 text-green-700">Live • Real-time</span></div>
+<div id="activeGameQuestion" class="mt-4"></div>
+<div id="activeGameOptions" class="mt-3 space-y-2"></div>
+<div id="activeGameHistory" class="mt-5 space-y-2 max-h-[300px] overflow-y-auto"></div>
+<div class="mt-4 p-3 rounded-[14px] bg-white/70 border">
+<p class="text-xs font-bold">Send Question + Nasty Options (partner answers live):</p>
+<input id="customQuestion" placeholder="Your question (e.g. What turns you on? 😈)" class="w-full mt-2 p-2.5 rounded-xl bg-white border text-sm">
+<div class="grid grid-cols-2 gap-2 mt-2">
+<input id="opt1" placeholder="Option 1 😏" class="p-2.5 rounded-xl bg-white border text-sm">
+<input id="opt2" placeholder="Option 2 🔥" class="p-2.5 rounded-xl bg-white border text-sm">
+<input id="opt3" placeholder="Option 3 💋" class="p-2.5 rounded-xl bg-white border text-sm">
+<input id="opt4" placeholder="Option 4 🌙" class="p-2.5 rounded-xl bg-white border text-sm">
+</div>
+<button onclick="sendGameQuestion()" class="w-full mt-3 py-3 rounded-xl bg-[#FF4D6D] text-white font-bold text-xs shadow">Send Question Live → Partner gets popup + options</button>
+</div>
+<button onclick="leaveGame()" class="w-full mt-3 py-2 rounded-xl bg-white border text-xs">Leave Game</button>
+</div>
+
+<div id="gameHistory" class="mt-4 space-y-2"></div>
+</div>
+
+<div id="page-notifications" class="page">
+<div class="flex items-center gap-3 mb-4"><button onclick="navigateTo('home')" class="w-9 h-9 rounded-full glass-strong shadow-sm">←</button><h2 class="font-bold">Inbox 🔔 Real-time</h2><button onclick="clearNotifs()" class="ml-auto px-3 py-1.5 rounded-full bg-black text-white text-xs font-bold shadow">Clear All</button></div>
+<div class="glass-strong rounded-[20px] p-4 shadow-xl"><div id="notifList" class="space-y-2.5"></div></div>
+</div>
+
+</main>
+
+<nav class="fixed bottom-0 left-0 right-0 z-30 glass-strong border-t px-1 py-2">
+<div class="max-w-[500px] mx-auto flex justify-around">
+<button onclick="navigateTo('home')" data-nav="home" class="nav-btn active flex flex-col items-center p-1.5"><div class="nav-icon w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-[13px]">🏠</div><span class="text-[9px] font-bold mt-1">Home</span></button>
+<button onclick="navigateTo('chat')" data-nav="chat" class="nav-btn flex flex-col items-center p-1.5"><div class="nav-icon w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-[13px]">💬</div><span class="text-[9px] font-bold mt-1">Chat</span></button>
+<button onclick="navigateTo('pair')" data-nav="pair" class="nav-btn flex flex-col items-center p-1.5"><div class="nav-icon w-8 h-8 rounded-full bg-[#FF4D6D] text-white flex items-center justify-center text-[13px] shadow">🔗</div><span class="text-[9px] font-bold mt-1">Pair</span></button>
+<button onclick="navigateTo('horny')" data-nav="horny" class="nav-btn flex flex-col items-center p-1.5"><div class="nav-icon w-8 h-8 rounded-full bg-gradient-to-br from-red-500 to-pink-500 text-white flex items-center justify-center text-[13px] shadow">🔥</div><span class="text-[9px] font-bold mt-1">Horny</span></button>
+<button onclick="navigateTo('games')" data-nav="games" class="nav-btn flex flex-col items-center p-1.5"><div class="nav-icon w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-[13px]">🎲</div><span class="text-[9px] font-bold mt-1">Games</span></button>
+<button onclick="navigateTo('notifications')" data-nav="notifications" class="nav-btn flex flex-col items-center p-1.5"><div class="nav-icon w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-[13px] relative">🔔<span id="navNotifDot" class="hidden absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span></div><span class="text-[9px] font-bold mt-1">Inbox</span></button>
+</div>
+</nav>
+
+<div id="toast" class="fixed bottom-[90px] left-1/2 -translate-x-1/2 hidden z-50"><div class="bg-black text-white px-5 py-2.5 rounded-full text-xs font-bold shadow-2xl" id="toastT">Saved</div></div>
+
+<script>
+// PIN - Polished original
+let pinInput='';function renderDots(){let d='';for(let i=0;i<4;i++) d+=`<div class="w-3 h-3 rounded-full ${i<pinInput.length?'bg-white':'bg-white/40'} shadow"></div>`;document.getElementById('pinDots').innerHTML=d}
+function pressPin(n){if(pinInput.length<4){pinInput+=n;renderDots();if(pinInput.length===4) setTimeout(checkPin,150)}}
+function clearPin(){pinInput='';renderDots()}function deletePin(){pinInput=pinInput.slice(0,-1);renderDots()}
+function checkPin(){const s=localStorage.getItem('lovework_pin');if(s&&pinInput===s){pinLock.classList.add('hidden');toast('Welcome 💖 Polished V16');pinInput='';renderDots()}else if(s){toast('Wrong PIN');pinInput='';renderDots()}}
+function setPin(){const p1=newPin.value,p2=newPin2.value;if(p1.length!==4||!/^\d{4}$/.test(p1)){toast('4 digits');return}if(p1!==p2){toast('No match');return}localStorage.setItem('lovework_pin',p1);pinLock.classList.add('hidden');toast('PIN set V16')}
+function lockApp(){pinLock.classList.remove('hidden');pinInput='';renderDots();initPin()}
+function resetPin(){if(confirm('Reset PIN?')){localStorage.removeItem('lovework_pin');initPin();pinSetup.classList.remove('hidden');pinEnter.classList.add('hidden')}}
+function initPin(){const s=localStorage.getItem('lovework_pin');if(!s){pinSetup.classList.remove('hidden');pinEnter.classList.add('hidden')}else{pinSetup.classList.add('hidden');pinEnter.classList.remove('hidden')}renderDots()}initPin();
+function toggleSettings(){document.getElementById('set').classList.toggle('hidden')}
+function saveNames(){localStorage.setItem('myName',myName.value);localStorage.setItem('myWhatsApp',myWhatsAppInput.value);localStorage.setItem('partnerName',partnerName.value);document.getElementById('homeName').innerText=myName.value;toast('Saved V16 Polished 💕');if(window.pairManager) pairManager.userName=myName.value;}
+function navigateTo(p){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));document.getElementById('page-'+p).classList.add('active');document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));const nb=document.querySelector(`[data-nav="${p}"]`);if(nb)nb.classList.add('active');if(p==='pair' && window.pairManager) pairManager.checkPair();if(p==='chat') renderChat();if(p==='dates') renderDates();if(p==='horny') renderHorny();if(p==='games') renderGamesLobby();if(p==='notifications') renderNotifs();window.scrollTo(0,0)}
+function toast(m){document.getElementById('toastT').innerText=m;document.getElementById('toast').classList.remove('hidden');setTimeout(()=>document.getElementById('toast').classList.add('hidden'),3000)}
+
+// Device Notifications - Polished + Working
+function requestNotifPermission(){
+  if(!('Notification' in window)){toast('Browser does not support popups'); return;}
+  Notification.requestPermission().then(p=>{
+    if(p==='granted'){
+      toast('Device popups enabled 🔔📱 V16');
+      showPopup('LoveWork V16 💖','Device popups enabled! You will get real popups even when app in background','💖');
+      // Test notification
+      setTimeout(()=>{new Notification('LoveWork Test 🔔',{body:'Popups working! Real-time notifications enabled', icon:'./icon-192.png'});},500);
+    } else if(p==='denied'){toast('Popups blocked - enable in browser settings → Notifications');}
+    else toast('Permission: '+p);
+  });
+}
+function showPopup(title, body, emoji='💖'){
+  // In-app popup polished
+  const container=document.getElementById('notifPopupContainer');
+  const id=Date.now()+Math.floor(Math.random()*1000);
+  const el=document.createElement('div');
+  el.id='popup-'+id;
+  el.className='notif-popup glass-strong rounded-[16px] p-4 shadow-2xl max-w-[340px] border-l-4 border-[#FF4D6D]';
+  el.innerHTML=`<div class="flex gap-3"><div class="text-2xl">${emoji}</div><div class="flex-1"><p class="font-bold text-xs">${title}</p><p class="text-[11px] mt-1 leading-relaxed">${body}</p></div><button onclick="document.getElementById('popup-'+id).remove()" class="w-6 h-6 rounded-full bg-white border flex items-center justify-center text-[10px]">✕</button></div>`;
+  container.appendChild(el);
+  setTimeout(()=>{const e=document.getElementById('popup-'+id); if(e) e.remove();},6000);
+  if(navigator.vibrate) navigator.vibrate([200,100,200,100,300]);
+  if('Notification' in window && Notification.permission==='granted'){
+    try{
+      const n=new Notification(title,{body: body, icon:'./icon-192.png', badge:'./icon-192.png', vibrate:[200,100,200]});
+      n.onclick=()=>{window.focus(); n.close();};
+    }catch(e){}
+  }
+  createFloat(emoji);
+}
+function createFloat(emoji){const b=document.getElementById('floatBox'); const el=document.createElement('div'); el.className='float'; el.style.left=Math.random()*85+5+'vw'; el.innerText=emoji; el.style.fontSize=(18+Math.random()*14)+'px'; b.appendChild(el); setTimeout(()=>el.remove(),4000);}
+
+// Calendar - Polished + No past dates
+let selDate=null, selMonth=null, selYear=null;
+function buildCal(){
+  const now=new Date();
+  const y=now.getFullYear(), m=now.getMonth(), today=now.getDate();
+  selYear=y; selMonth=m;
+  const firstDay=new Date(y,m,1).getDay();
+  const days=new Date(y,m+1,0).getDate();
+  let h=['S','M','T','W','T','F','S'].map(x=>`<div class="opacity-40 font-bold py-1">${x}</div>`).join('');
+  for(let i=0;i<firstDay;i++) h+=`<div></div>`;
+  for(let i=1;i<=days;i++){
+    const isPast=i<today;
+    const isToday=i===today;
+    const cls=isPast ? 'calendar-day disabled' : isToday ? 'calendar-day today' : 'calendar-day bg-white/70 hover:bg-white';
+    h+=`<button onclick="pickD(${i})" id="d-${i}" class="h-9 rounded-xl ${cls} text-[12px] shadow-sm">${i}</button>`;
+  }
+  document.getElementById('cal').innerHTML=h;
+  // Mark dates that have bookings
+  if(window.dateCache){
+    window.dateCache.forEach(d=>{const el=document.getElementById('d-'+d.day); if(el) el.classList.add('has-date');});
+  }
+}
+function pickD(d){
+  const now=new Date(); const today=now.getDate();
+  if(d<today){document.getElementById('dateValidation').innerText='❌ Cannot book past dates'; document.getElementById('dateValidation').className='text-[10px] mt-1 text-red-600 block'; return;}
+  selDate=d;
+  document.getElementById('selDate').innerText=d+' / '+(selMonth+1)+' / '+selYear;
+  document.getElementById('dateValidation').className='hidden';
+  document.querySelectorAll('[id^=d-]').forEach(b=>{if(!b.classList.contains('today')) b.className=b.className.replace('selected',''); if(b.classList.contains('today') && b.id!=='d-'+d) b.className='h-9 rounded-xl calendar-day today text-[12px] shadow-sm';});
+  const el=document.getElementById('d-'+d);
+  if(!el.classList.contains('today')) el.classList.add('selected');
+}
+</script>
+
+<script>
+// BACKEND - Polished V16 - Simple code, no WhatsApp, real-time everything
+let supabaseClient=null;
+let currentPair=null;
+let activeGameSession=null;
+let _gamesCache=[];
+let _gamesRenderQueued=false;
+function getMyGameId(){ return localStorage.getItem('lovework_user_id') || (localStorage.getItem('myWhatsApp')||'').replace(/[^0-9]/g,'').slice(-10) || 'me'; }
+function getMyName(){ return localStorage.getItem('myName')||'Me'; }
+function queueRenderGames(){ if(_gamesRenderQueued) return; _gamesRenderQueued=true; requestAnimationFrame(()=>{ _gamesRenderQueued=false; if(_gamesCache.length) renderGamesLobbyUI(_gamesCache); if(activeGameSession){ const upd=_gamesCache.find(g=>g.id===activeGameSession.id); if(upd){ activeGameSession=upd; renderActiveGame(); } } }); }
+
+function normalizePhone(p){return (p||'').replace(/[^0-9]/g,'').slice(-10);}
+
+class PolishedPairManager {
+  constructor(){
+    this.userId=localStorage.getItem('lovework_user_id')||'user_'+Date.now()+'_'+Math.random().toString(36).substr(2,9);
+    localStorage.setItem('lovework_user_id',this.userId);
+    this.currentPair=JSON.parse(localStorage.getItem('lovework_permanent_pair_real')||'null');
+    currentPair=this.currentPair;
+    this.init();
+  }
+  async init(){
+    try{
+      supabaseClient=window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      document.getElementById('connDot').className='w-2 h-2 rounded-full bg-green-500 pulse-dot';
+      document.getElementById('connText').innerText='V16 polished • real-time • #FF4D6D';
+      this.startRealtime();
+      this.startHeartbeat();
+      this.checkPair();
+    }catch(e){console.error(e);}
+  }
+  startHeartbeat(){
+    setInterval(async()=>{
+      if(!currentPair?.id || !supabaseClient) return;
+      try{
+        const myPhoneNorm=(localStorage.getItem('myWhatsApp')||'').replace(/[^0-9]/g,'').slice(-10);
+        const myId=localStorage.getItem('lovework_user_id')||'';
+        const pair=currentPair;
+        let isA=true;
+        if(pair.phone_a && myPhoneNorm && pair.phone_a===myPhoneNorm) isA=true;
+        else if(pair.phone_b && myPhoneNorm && pair.phone_b===myPhoneNorm) isA=false;
+        else if(pair.phone_a && myId && pair.phone_a===myId) isA=true;
+        else if(pair.phone_b && myId && pair.phone_b===myId) isA=false;
+        else { const myName=localStorage.getItem('myName')||''; if(pair.name_b===myName) isA=false; }
+        const upd=isA ? {last_seen_a:new Date().toISOString()} : {last_seen_b:new Date().toISOString()};
+        await supabaseClient.from('pairs').update(upd).eq('id',pair.id);
+      }catch(e){}
+    },25000);
+  }
+  _cleanupChannels(){
+    try{
+      if(this._pairChannel){ supabaseClient.removeChannel(this._pairChannel); this._pairChannel=null; }
+      if(this._globalChannel){ supabaseClient.removeChannel(this._globalChannel); this._globalChannel=null; }
+    }catch(e){}
+  }
+  startRealtime(){
+    if(!supabaseClient) return;
+    this._cleanupChannels();
+    this._globalChannel=supabaseClient.channel('lovework-global-'+(localStorage.getItem('lovework_user_id')||'anon'))
+      .on('postgres_changes',{event:'*',schema:'public',table:'pairs'},()=>this.checkPair())
+      .subscribe();
+    if(currentPair?.id) this.startRealtimePair(currentPair.id);
+  }
+  startRealtimePair(pairId){
+    if(!supabaseClient || !pairId) return;
+    try{ if(this._pairChannel) supabaseClient.removeChannel(this._pairChannel); }catch(e){}
+    const pid=pairId;
+    this._pairChannel=supabaseClient.channel('lovework-pair-'+pid)
+      .on('postgres_changes',{event:'*',schema:'public',table:'pairs', filter:`id=eq.${pid}`},()=>this.checkPair())
+      .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages', filter:`pair_id=eq.${pid}`},(p)=>{
+          renderChat();
+          try{
+            const myNorm=(localStorage.getItem('myWhatsApp')||'').replace(/[^0-9]/g,'').slice(-10);
+            const senderNorm=(p.new.sender_phone||'').replace(/[^0-9]/g,'').slice(-10);
+            const myId=localStorage.getItem('lovework_user_id')||'';
+            if(senderNorm!==myNorm && p.new.sender_phone!==myId){ showPopup('New Message 💌', p.new.text.slice(0,60), '💌'); }
+          }catch(e){}
+      })
+      .on('postgres_changes',{event:'*',schema:'public',table:'dates', filter:`pair_id=eq.${pid}`},()=>{renderDates();})
+      .on('postgres_changes',{event:'*',schema:'public',table:'game_sessions', filter:`pair_id=eq.${pid}`},(p)=>{
+        try{
+          const rec=p.new||p.old; if(!rec) return;
+          if(p.eventType==='INSERT'){ if(!_gamesCache.find(g=>g.id===rec.id)) _gamesCache.unshift(rec); }
+          else if(p.eventType==='UPDATE'){ const i=_gamesCache.findIndex(g=>g.id===rec.id); if(i>-1) _gamesCache[i]=rec; else _gamesCache.unshift(rec); if(activeGameSession && rec.id===activeGameSession.id){ activeGameSession=rec; renderActiveGame(); } }
+          else if(p.eventType==='DELETE'){ _gamesCache=_gamesCache.filter(g=>g.id!==(p.old?.id)); }
+          queueRenderGames();
+          if(p.eventType==='INSERT' && rec.status==='invite' && rec.created_by!==getMyGameId()){ showPopup('🎲 Game Invite!', `${rec.game_type} - Tap to Join!`, '🎲'); }
+          if(p.eventType==='UPDATE' && rec.question && rec.current_turn!==getMyGameId() && rec.current_turn!==''){ if(!activeGameSession || activeGameSession.id!==rec.id || !activeGameSession.question){ showPopup('🎲 New Question!', `${rec.question.slice(0,45)} - Answer now!`, '🎲'); } }
+        }catch(e){}
+      })
+      .on('postgres_changes',{event:'INSERT',schema:'public',table:'notifications', filter:`pair_id=eq.${pid}`},(p)=>{ showPopup(p.new.title, p.new.text, '🔔'); renderNotifs(); })
+      .subscribe();
+  }
+
+  generateUniqueCode(){
+    const chars='23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+    let c=''; for(let i=0;i<6;i++) c+=chars[Math.floor(Math.random()*chars.length)];
+    return `LW-${c}`;
+  }
+  async checkPair(){
+    const container=document.getElementById('pairContainer');
+    if(!container) return;
+    container.innerHTML=`<div class="glass-strong rounded-[20px] p-6 text-center shadow"><div class="w-8 h-8 border-2 border-[#FF4D6D] border-t-transparent rounded-full animate-spin mx-auto"></div><p class="text-sm font-bold mt-3">Checking permanent pair...</p></div>`;
+    try{
+      const phone=localStorage.getItem('myWhatsApp')||'';
+      let pair=null;
+      if(supabaseClient && phone){
+        const norm=normalizePhone(phone);
+        if(norm){
+          const {data}=await supabaseClient.from('pairs').select('*').or(`phone_a.eq.${norm},phone_b.eq.${norm}`).order('created_at',{ascending:false}).limit(1);
+          if(data&&data[0]) pair=data[0];
+        }
+      }
+      if(!pair) pair=JSON.parse(localStorage.getItem('lovework_permanent_pair_real')||'null');
+      if(pair && pair.status==='active'){
+        this.currentPair=pair; currentPair=pair;
+        localStorage.setItem('lovework_permanent_pair_real',JSON.stringify(pair));
+        try{ if(pair?.id) this.startRealtimePair(pair.id); }catch(e){}
+        this.showPaired(pair);
+        document.getElementById('pairingStatusHome').innerHTML=`❤ Paired with <b>${pair.name_b||'Partner'}</b> • ${pair.code} — Permanent V16 ✅`;
+        document.getElementById('pairingStatusSettings').innerHTML=`❤ Paired • ${pair.code}`;
+        document.getElementById('chatPartnerName').innerText=pair.name_b||'My Love 💕';
+      } else if(pair && pair.status==='waiting'){
+        this.showWaiting(pair);
+      } else this.showNotPaired();
+    }catch(e){this.showNotPaired();}
+  }
+  showNotPaired(){
+    document.getElementById('pairContainer').innerHTML=`
+    <div class="glass-strong rounded-[20px] p-5 shadow-xl">
+      <h3 class="font-bold text-[15px]">Generate Unique Code 🔗 V16</h3>
+      <p class="text-[11px] opacity-60 mt-1">No WhatsApp needed • Simple code • Partner types it → permanent</p>
+      <input id="myNameInput" placeholder="Your name" value="${localStorage.getItem('myName')||''}" class="w-full mt-4 p-3.5 rounded-[14px] bg-white border text-sm shadow-sm">
+      <input id="myWAInput" placeholder="Your WhatsApp (optional)" value="${localStorage.getItem('myWhatsApp')||''}" class="w-full mt-3 p-3.5 rounded-[14px] bg-white border text-sm shadow-sm">
+      <button onclick="pairManager.createPair()" class="w-full mt-4 py-3.5 rounded-[14px] bg-[#FF4D6D] text-white font-bold shadow-lg shadow-pink-200">Generate Unique Code ✨</button>
+    </div>
+    <div class="glass-strong rounded-[20px] p-5 mt-4 shadow-xl">
+      <h3 class="font-bold text-[15px]">Join with Code 🔗</h3>
+      <p class="text-[11px] opacity-60 mt-1">Partner sent you code? Type it here.</p>
+      <input id="joinCodeInput" placeholder="LW-XXXXXX" class="w-full mt-4 p-3.5 rounded-[14px] bg-white border text-sm uppercase tracking-widest text-center font-bold shadow-sm">
+      <input id="joinNameInput" placeholder="Your name" class="w-full mt-3 p-3.5 rounded-[14px] bg-white border text-sm shadow-sm">
+      <button onclick="pairManager.joinWithCode()" class="w-full mt-4 py-3.5 rounded-[14px] bg-black text-white font-bold shadow">Connect Permanently ❤️</button>
+      <div id="joinError" class="hidden mt-3 p-3 rounded-xl bg-red-50 text-red-700 text-xs border border-red-200"></div>
+    </div>`;
+  }
+  showWaiting(pair){
+    document.getElementById('pairContainer').innerHTML=`
+    <div class="glass-strong rounded-[24px] p-6 text-center shadow-xl">
+      <div class="text-5xl mb-3">✨</div>
+      <h3 class="font-bold text-lg">Your Unique Code</h3>
+      <p class="text-[12px] opacity-60 mt-1">Share this code - partner types it to connect permanently</p>
+      <div class="mt-5 p-5 rounded-[18px] bg-white border-2 border-dashed border-[#FF4D6D] shadow-inner">
+        <p class="text-[10px] opacity-60 tracking-widest">CODE</p>
+        <p class="text-3xl font-bold tracking-[0.2em] mt-2 text-[#FF4D6D]">${pair.code}</p>
+        <button onclick="pairManager.copyCode('${pair.code}')" class="mt-4 w-full py-2.5 rounded-xl bg-[#FF4D6D] text-white font-bold text-xs shadow">Copy Code 📋</button>
+      </div>
+      <p class="text-[11px] opacity-50 mt-4">Room ${pair.id.slice(0,8)} • Waiting • Real-time popup when partner joins</p>
+      <div class="flex gap-2.5 mt-5"><button onclick="pairManager.copyCode('${pair.code}')" class="flex-1 py-3 rounded-xl bg-white border font-bold text-sm shadow-sm">Copy</button><button onclick="pairManager.cancelWaiting()" class="flex-1 py-3 rounded-xl bg-black text-white font-bold text-sm shadow">Cancel</button></div>
+    </div>`;
+  }
+  showPaired(pair){
+    document.getElementById('pairContainer').innerHTML=`
+    <div class="glass-strong rounded-[24px] p-6 text-center border-[1.5px] border-pink-300 shadow-xl">
+      <div class="text-5xl mb-3 bob">💖</div>
+      <h3 class="font-bold text-xl pacifico">Permanently Paired! V16</h3>
+      <p class="text-sm mt-2">You & <b>${pair.name_b||'Partner'}</b> connected forever</p>
+      <div class="mt-4 inline-block px-5 py-2.5 rounded-full bg-[#FF4D6D] text-white font-bold tracking-widest shadow-lg">${pair.code}</div>
+      <div class="mt-5 grid grid-cols-2 gap-2.5 text-[11px]">
+        <div class="p-3 rounded-xl bg-white/70 border"><p class="opacity-60">Room</p><p class="font-bold">${pair.id.slice(0,8)}</p></div>
+        <div class="p-3 rounded-xl bg-white/70 border"><p class="opacity-60">Status</p><p class="font-bold text-green-600">● Permanent</p></div>
+      </div>
+      <button onclick="pairManager.unpair()" class="w-full mt-5 py-2.5 rounded-xl bg-white border text-xs shadow-sm">Unpair</button>
+    </div>`;
+  }
+  async createPair(){
+    const myName=document.getElementById('myNameInput')?.value.trim();
+    const myWA=document.getElementById('myWAInput')?.value.trim()||'temp_'+Date.now();
+    if(!myName){toast('Enter your name');return;}
+    localStorage.setItem('myName',myName); localStorage.setItem('myWhatsApp',myWA); document.getElementById('homeName').innerText=myName;
+    let code=''; for(let a=0;a<10;a++){code=this.generateUniqueCode(); if(supabaseClient){const {data}=await supabaseClient.from('pairs').select('code').eq('code',code).maybeSingle(); if(!data) break;} else break;}
+    const pairKey=code+'_'+Date.now();
+    try{
+      const {data,error}=await supabaseClient.from('pairs').insert({code, phone_a:normalizePhone(myWA)||pairKey, phone_b:'', name_a:myName, name_b:'', status:'waiting', pair_key:pairKey}).select().single();
+      if(error) throw error;
+      this.currentPair=data; currentPair=data;
+      localStorage.setItem('lovework_permanent_pair_real',JSON.stringify(data));
+      this.showWaiting(data);
+      showPopup('Code Generated ✨', `Code ${code} - share to partner`, '✨');
+    }catch(e){toast(e.message);}
+  }
+  async joinWithCode(){
+    let code=document.getElementById('joinCodeInput')?.value.trim().toUpperCase().replace(/[^A-Z0-9-]/g,'');
+    let myName=document.getElementById('joinNameInput')?.value.trim();
+    if(!code){toast('Enter code');return;} if(!myName){toast('Enter name');return;}
+    if(!code.startsWith('LW-')) code='LW-'+code.replace('LW-','');
+    try{
+      const {data:pair,error}=await supabaseClient.from('pairs').select('*').eq('code',code).maybeSingle();
+      if(error) throw error;
+      if(!pair) throw new Error(`Code ${code} not found`);
+      if(pair.status==='active') throw new Error(`Already paired with ${pair.name_b}`);
+      const {data:active,error:upErr}=await supabaseClient.from('pairs').update({phone_b:normalizePhone(localStorage.getItem('myWhatsApp'))||'temp', name_b:myName, status:'active', activated_at:new Date().toISOString()}).eq('id',pair.id).select().single();
+      if(upErr) throw upErr;
+      this.currentPair=active; currentPair=active;
+      localStorage.setItem('myName',myName);
+      localStorage.setItem('lovework_permanent_pair_real',JSON.stringify(active));
+      this.showPaired(active);
+      showPopup('Paired! 💖', `Permanently paired with code ${code}`, '💖');
+      await supabaseClient.from('notifications').insert({pair_id:active.id, title:'Partner Joined! 💖', text:`${myName} joined with ${code}`});
+    }catch(e){const el=document.getElementById('joinError'); if(el){el.textContent=e.message; el.classList.remove('hidden'); setTimeout(()=>el.classList.add('hidden'),5000);} toast(e.message);}
+  }
+  copyCode(code){navigator.clipboard.writeText(code).then(()=>toast(`Copied ${code} 📋`)).catch(()=>{const ta=document.createElement('textarea'); ta.value=code; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); toast(`Copied ${code}`);});}
+  cancelWaiting(){if(!confirm('Cancel code?')) return; if(this.currentPair?.id) supabaseClient.from('pairs').delete().eq('id',this.currentPair.id).then(()=>{}); localStorage.removeItem('lovework_permanent_pair_real'); this.currentPair=null; currentPair=null; this.showNotPaired();}
+  async unpair(){if(!confirm('Unpair permanently?')) return; if(this.currentPair?.id) await supabaseClient.from('pairs').delete().eq('id',this.currentPair.id); localStorage.removeItem('lovework_permanent_pair_real'); this.currentPair=null; currentPair=null; this.showNotPaired();}
+}
+
+let pairManager;
+document.addEventListener('DOMContentLoaded',()=>{
+  pairManager=new PolishedPairManager();
+  window.pairManager=pairManager;
+  buildCal();
+  const my=localStorage.getItem('myName')||'Me'; document.getElementById('myName').value=my; document.getElementById('homeName').innerText=my; document.getElementById('myWhatsAppInput').value=localStorage.getItem('myWhatsApp')||'';
+  document.body.addEventListener('click', ()=>{if('Notification' in window && Notification.permission==='default') Notification.requestPermission();}, {once:true});
+});
+
+// Chat - Polished real-time
+async function renderChat(){
+  const box=document.getElementById('chatMessages');
+  if(!currentPair||currentPair.status!=='active'){box.innerHTML=`<div class="text-center mt-12"><div class="text-4xl">💬</div><p class="text-xs opacity-60 mt-3">Not paired yet<br><button onclick="navigateTo('pair')" class="mt-3 px-4 py-2 rounded-full bg-[#FF4D6D] text-white text-xs font-bold">Pair Now 🔗</button></p></div>`; return;}
+  try{
+    const {data}=await supabaseClient.from('messages').select('*').eq('pair_id',currentPair.id).order('created_at',{ascending:true}).limit(200);
+    if(!data||data.length===0){box.innerHTML=`<div class="text-center mt-12"><div class="text-4xl">💖</div><p class="text-xs opacity-60 mt-3">No messages yet<br>Say hi to ${currentPair.name_b} 💕<br><span class="text-[10px]">Real-time • Popups on</span></p></div>`; return;}
+    const myNorm=normalizePhone(localStorage.getItem('myWhatsApp'));
+    box.innerHTML=data.map(m=>{const isMe=normalizePhone(m.sender_phone)===myNorm; return `<div class="flex ${isMe?'justify-end':'justify-start'}"><div class="chat-bubble ${isMe?'chat-me':'chat-them'}">${m.text}<div class="text-[9px] opacity-60 mt-1.5">${new Date(m.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div></div></div>`;}).join('');
+    box.scrollTop=box.scrollHeight;
+  }catch(e){}
+}
+async function sendChat(){
+  if(!currentPair){toast('Pair first'); navigateTo('pair'); return;}
+  const input=document.getElementById('chatInput'); const txt=input.value.trim(); if(!txt) return; input.value='';
+  try{await supabaseClient.from('messages').insert({pair_id:currentPair.id, sender_phone:normalizePhone(localStorage.getItem('myWhatsApp'))||'me', text:txt});}catch(e){toast(e.message);}
+}
+
+// Dates - No past dates + Real-time
+let dateCache=[];
+async function renderDates(){
+  if(!currentPair || !supabaseClient){document.getElementById('upcoming').innerHTML='<p class="text-xs opacity-50">Pair first to sync dates</p>'; return;}
+  try{
+    const {data}=await supabaseClient.from('dates').select('*').eq('pair_id',currentPair.id).order('created_at',{ascending:false});
+    dateCache=data||[];
+    buildCal();
+    document.getElementById('upcoming').innerHTML=(data||[]).map(x=>`<div class="p-3 rounded-[14px] bg-white/70 border text-xs flex justify-between"><div><b>📅 Day ${x.day}/{x.month}</b> at ${x.time}<br><span class="opacity-70">${x.title||''}</span></div><span class="text-[10px] opacity-50">${new Date(x.created_at).toLocaleDateString()}</span></div>`).join('')||'<p class="text-xs opacity-50">No dates yet - book one above, past dates disabled</p>';
+  }catch(e){}
+}
+async function book(){
+  if(!selDate){toast('Pick a date first'); return;}
+  const now=new Date(); if(selDate<now.getDate() && selMonth===now.getMonth() && selYear===now.getFullYear()){toast('❌ Cannot book past dates'); document.getElementById('dateValidation').innerText='❌ Past date - pick today or future'; document.getElementById('dateValidation').className='text-[10px] mt-1 text-red-600 block'; return;}
+  if(!currentPair){toast('Pair first'); navigateTo('pair'); return;}
+  const time=document.getElementById('dTime').value;
+  const title=document.getElementById('dateTitle')?.value||'Date Night 🌹';
+  try{
+    await supabaseClient.from('dates').insert({pair_id:currentPair.id, day:selDate, month:selMonth+1, year:selYear, time, title});
+    await supabaseClient.from('notifications').insert({pair_id:currentPair.id, title:'Date Booked 🌹', text:`${localStorage.getItem('myName')} booked ${title} on ${selDate}/{selMonth+1} at ${time}`});
+    showPopup('Date Booked 🌹', `${title} on ${selDate}/{selMonth+1} at ${time}`, '🌹');
+    toast('Date booked • Real-time • Partner notified 🌹');
+    renderDates();
+  }catch(e){toast(e.message);}
+}
+
+// Horny - Polished
+let selectedMood='horny';
+function setMood(m){
+  selectedMood=m;
+  document.querySelectorAll('[id^=mood-]').forEach(el=>el.className='p-3.5 rounded-[14px] bg-white border font-bold text-xs shadow-sm');
+  document.getElementById('mood-'+m).className='p-3.5 rounded-[14px] bg-gradient-to-br from-red-500 to-pink-500 text-white font-bold text-xs shadow-lg horny-glow';
+}
+async function sendHornyInvite(){
+  if(!currentPair){toast('Pair first'); return;}
+  const date=document.getElementById('hornyDate').value;
+  const time=document.getElementById('hornyTime').value;
+  const note=document.getElementById('hornyNote').value;
+  if(!date||!time){toast('Pick date & time'); return;}
+  const selectedDate=new Date(date); const today=new Date(); today.setHours(0,0,0,0);
+  if(selectedDate<today){toast('❌ Cannot set past date for romance'); return;}
+  const emoji={horny:'😈', romantic:'💋', cuddle:'🥰', naughty:'🔥'}[selectedMood]||'🔥';
+  try{
+    await supabaseClient.from('notifications').insert({pair_id:currentPair.id, title:`${emoji} ${selectedMood.toUpperCase()} Invite!`, text:`${localStorage.getItem('myName')} wants ${selectedMood} on ${date} at ${time}. ${note}`});
+    await supabaseClient.from('dates').insert({pair_id:currentPair.id, day:selectedDate.getDate(), month:selectedDate.getMonth()+1, year:selectedDate.getFullYear(), time, title:`${emoji} ${selectedMood} Night - ${note}`});
+    showPopup(`${emoji} Horny Invite Sent!`, `Partner gets device popup for ${date} at ${time}`, emoji);
+    toast(`🔥 Invite sent • Popup • Real-time`);
+    renderHorny();
+  }catch(e){toast(e.message);}
+}
+async function renderHorny(){
+  if(!currentPair || !supabaseClient) return;
+  try{
+    const {data}=await supabaseClient.from('notifications').select('*').eq('pair_id',currentPair.id).ilike('title','%Invite%').order('created_at',{ascending:false}).limit(10);
+    document.getElementById('hornyInvites').innerHTML=(data||[]).map(n=>`<div class="p-3 rounded-[14px] bg-white/70 border-l-4 border-[#FF4D6D] text-xs shadow-sm"><b>${n.title}</b><br>${n.text}<br><span class="text-[10px] opacity-50">${new Date(n.created_at).toLocaleString()}</span></div>`).join('')||'<p class="text-xs opacity-50">No invites yet</p>';
+  }catch(e){}
+}
+
+// Games - Real-time chat-style with invite → join → live Q&A
+
+async function createGameInvite(gameType){
+  if(!currentPair){toast('Pair first'); navigateTo('pair'); return;}
+  try{
+    const myId=getMyGameId(); const myName=getMyName(); toast(`Creating ${gameType}...`);
+    let payload={ pair_id: currentPair.id, game_type: gameType, status:'invite', created_by: myId, created_by_name: myName, question:'', options:[], history:[], current_turn:'', answers:{} };
+    let {data,error}=await supabaseClient.from('game_sessions').insert(payload).select().single();
+    if(error && (error.message.includes('answers')||error.message.includes('created_by_name')||error.message.includes('joined_by'))){
+      let minimal={ pair_id: currentPair.id, game_type: gameType, status:'invite', created_by: myId, question:'', options:[], history:[], current_turn:'' };
+      const r2=await supabaseClient.from('game_sessions').insert(minimal).select().single(); data=r2.data; error=r2.error;
+    }
+    if(error) throw error;
+    _gamesCache.unshift(data); queueRenderGames();
+    showPopup('Game Invite Sent 🎲', `${gameType} invite`, '🎲');
+    supabaseClient.from('notifications').insert({pair_id: currentPair.id, title:`🎲 Invite: ${gameType}`, text:`${myName} invites you`}).then(()=>{});
+    renderGamesLobby();
+  }catch(e){ toast(e.message); }
+}
+function renderGamesLobbyUI(invites){
+  const el=document.getElementById('gameInvites'); const histEl=document.getElementById('gameHistory'); if(!el) return;
+  const myId=getMyGameId();
+  const pending=(invites||[]).filter(g=>g.status==='invite' && g.created_by!==myId);
+  const myPending=(invites||[]).filter(g=>g.status==='invite' && g.created_by===myId);
+  const active=(invites||[]).filter(g=>g.status==='active');
+  let h='';
+  if(pending.length) h+=`<div class="p-3 rounded-[14px] bg-gradient-to-br from-[#FF4D6D] to-[#FF8FAB] text-white"><p class="font-bold text-xs">🎲 ${pending.length} Invite(s)</p><div class="mt-2 space-y-2">${pending.map(g=>`<div class="p-2.5 rounded-xl bg-white/20 flex justify-between items-center"><span class="text-xs font-bold">${g.game_type}</span><button onclick="joinGame('${g.id}')" class="px-4 py-1.5 rounded-full bg-black text-white text-xs">Join</button></div>`).join('')}</div></div>`;
+  if(myPending.length) h+=`<div class="mt-3 p-3 rounded-[14px] bg-white/80 border border-dashed border-pink-300"><p class="font-bold text-xs">Your invites</p><div class="mt-2 space-y-2">${myPending.map(g=>`<div class="p-2 rounded-xl bg-white border flex justify-between"><span class="text-xs">${g.game_type}</span><button onclick="cancelGame('${g.id}')" class="px-2 py-1 bg-gray-100 rounded-full text-xs">Cancel</button></div>`).join('')}</div></div>`;
+  if(active.length) h+=`<div class="mt-3 p-3 rounded-[14px] bg-white/80 border"><p class="font-bold text-xs">Active Live 🔥 ${active.length}</p><div class="mt-2 space-y-2">${active.map(g=>`<div class="p-2.5 rounded-xl bg-white border flex justify-between items-center ${activeGameSession?.id===g.id?'border-[#FF4D6D] border-2':''}"><div class="min-w-0 flex-1"><p class="text-xs font-bold truncate">${g.game_type}</p><p class="text-[10px] opacity-60 truncate">${g.question? 'Q:'+g.question.slice(0,34) : (g.history?.length? 'Last:'+g.history.slice(-1)[0].a.slice(0,20) : 'No Q')}</p></div><button onclick="openGame('${g.id}')" class="ml-2 px-3 py-1.5 rounded-full ${activeGameSession?.id===g.id?'bg-black':'bg-[#FF4D6D]'} text-white text-xs">${activeGameSession?.id===g.id?'Opened':'Open'}</button></div>`).join('')}</div></div>`;
+  if(!pending.length && !active.length && !myPending.length) h+=`<div class="p-4 rounded-[14px] bg-white/60 border text-xs text-center opacity-60">No invites yet 💖</div>`;
+  el.innerHTML=h;
+  if(histEl){ const recent=(invites||[]).slice(0,12); histEl.innerHTML=recent.length? recent.map(g=>{ const last=g.history?.length? g.history.slice(-1)[0]:null; return `<div class="p-3 rounded-[14px] bg-white/70 border text-xs"><b>${g.game_type}</b> • ${g.status}${last? `<p>Q:${last.q.slice(0,60)}</p><p class="text-[#FF4D6D] font-bold">A:${last.a}</p>`: '<p class="opacity-50">No Q&A</p>'}</div>`; }).join('') : '<p class="text-xs opacity-50 text-center py-4">No games yet</p>'; }
+}
+async function renderGamesLobby(){
+  const el=document.getElementById('gameInvites');
+  if(!currentPair || !supabaseClient){ if(el) el.innerHTML='<p class="text-xs opacity-50 p-3">Pair first 🔗</p>'; return; }
+  try{ const {data}=await supabaseClient.from('game_sessions').select('*').eq('pair_id',currentPair.id).order('created_at',{ascending:false}).limit(25); _gamesCache=data||[]; renderGamesLobbyUI(_gamesCache); }catch(e){ if(el) el.innerHTML=`<p class="text-xs text-red-500">${e.message}</p>`; }
+}
+async function cancelGame(id){ if(!confirm('Cancel?')) return; try{ await supabaseClient.from('game_sessions').delete().eq('id',id); _gamesCache=_gamesCache.filter(g=>g.id!==id); queueRenderGames(); toast('Canceled'); }catch(e){ toast(e.message);} }
+async function joinGame(gameId){
+  try{
+    const myName=getMyName(); const myId=getMyGameId();
+    let {data,error}=await supabaseClient.from('game_sessions').update({status:'active', joined_by: myId, joined_by_name: myName, updated_at: new Date().toISOString()}).eq('id',gameId).select().single();
+    if(error && error.message.includes('joined_by')){ const r2=await supabaseClient.from('game_sessions').update({status:'active', updated_at: new Date().toISOString()}).eq('id',gameId).select().single(); data=r2.data; error=r2.error; }
+    if(error) throw error;
+    activeGameSession=data; const i=_gamesCache.findIndex(g=>g.id===gameId); if(i>-1) _gamesCache[i]=data;
+    document.getElementById('activeGame').classList.remove('hidden'); renderActiveGame(); queueRenderGames();
+    showPopup('Joined 🎲', `${data.game_type} live!`, '🎲'); toast('Joined • Live');
+    supabaseClient.from('notifications').insert({pair_id: currentPair.id, title:`🎲 Joined: ${data.game_type}`, text:`${myName} joined!`}).then(()=>{});
+  }catch(e){ toast(e.message); }
+}
+async function openGame(gameId){
+  try{
+    const cached=_gamesCache.find(g=>g.id===gameId); if(cached){ activeGameSession=cached; document.getElementById('activeGame').classList.remove('hidden'); renderActiveGame(); }
+    const {data}=await supabaseClient.from('game_sessions').select('*').eq('id',gameId).single(); if(data){ activeGameSession=data; document.getElementById('activeGame').classList.remove('hidden'); renderActiveGame(); const i=_gamesCache.findIndex(g=>g.id===gameId); if(i>-1) _gamesCache[i]=data; else _gamesCache.unshift(data); queueRenderGames(); }
+  }catch(e){ toast(e.message); }
+}
+function renderActiveGame(){
+  if(!activeGameSession) return;
+  const myId=getMyGameId(); const amAsker=activeGameSession.question && activeGameSession.current_turn===myId; const amAnswerer=activeGameSession.question && activeGameSession.current_turn!=='' && activeGameSession.current_turn!==myId;
+  document.getElementById('activeGameTitle').innerText=`${activeGameSession.game_type} - Live 🔥`;
+  const st=document.getElementById('activeGameStatus'); st.innerText=activeGameSession.question ? (amAnswerer ? 'Your turn!' : amAsker ? 'Waiting...' : 'Live') : 'Live'; st.className=`text-[10px] px-2.5 py-1 rounded-full font-bold ${amAnswerer?'bg-yellow-100 text-yellow-700 animate-pulse':'bg-green-100 text-green-700'}`;
+  document.getElementById('activeGame').classList.remove('hidden');
+  const qArea=document.getElementById('activeGameQuestion');
+  if(activeGameSession.question){ const byMe=activeGameSession.current_turn===myId; qArea.innerHTML=`<div class="p-4 rounded-[16px] bg-white border-2 ${byMe?'border-gray-200':'border-[#FF4D6D]'}"><p class="text-[10px] opacity-60 font-bold">${byMe?'YOU ASKED':'LIVE QUESTION'}:</p><p class="font-bold text-[15px] mt-1">${activeGameSession.question}</p></div>`; } else { qArea.innerHTML=`<div class="p-3 rounded-[14px] bg-white/60 border text-xs text-center opacity-60">No question yet 👇</div>`; }
+  const optArea=document.getElementById('activeGameOptions'); const opts=activeGameSession.options||[];
+  if(opts.length && activeGameSession.question){
+    if(amAsker){ optArea.innerHTML=`<div class="p-3 rounded-xl bg-gray-50 border text-xs text-center">Waiting for partner...<div class="mt-2 flex flex-wrap gap-1 justify-center">${opts.map(o=>`<span class="px-2 py-1 bg-white border rounded-full text-[10px]">${o}</span>`).join('')}</div></div>`; }
+    else { optArea.innerHTML=`<p class="text-xs font-bold mb-2">Choose answer:</p><div class="grid gap-2">${opts.map((o,i)=>`<button onclick="answerGame(${i})" class="p-3.5 rounded-xl bg-white border-2 border-pink-100 text-left text-sm hover:bg-[#FF4D6D] hover:text-white font-bold">${String.fromCharCode(65+i)}. ${o}</button>`).join('')}</div>`; }
+  } else optArea.innerHTML='';
+  const hist=activeGameSession.history||[]; const hEl=document.getElementById('activeGameHistory');
+  if(hist.length) hEl.innerHTML=`<p class="text-xs font-bold mb-2">History • ${hist.length}</p><div class="space-y-2">${hist.slice().reverse().map(h=>`<div class="p-3 rounded-xl bg-white border text-xs"><p class="opacity-60 text-[10px]">${new Date(h.t).toLocaleTimeString()} • ${h.by}</p><p class="font-bold">Q:${h.q}</p><p>A:${h.a}</p></div>`).join('')}</div>`; else hEl.innerHTML='<p class="text-xs opacity-50 text-center">No answers yet</p>';
+}
+async function sendGameQuestion(){
+  if(!activeGameSession){ toast('Start or join first'); return; }
+  const q=document.getElementById('customQuestion').value.trim(); const opts=[document.getElementById('opt1').value.trim(),document.getElementById('opt2').value.trim(),document.getElementById('opt3').value.trim(),document.getElementById('opt4').value.trim()].filter(x=>x);
+  if(!q){ toast('Enter Q'); return; } if(opts.length<2){ toast('2 options min'); return; }
+  try{
+    const myId=getMyGameId(); const {data,error}=await supabaseClient.from('game_sessions').update({question:q, options:opts, current_turn:myId, updated_at:new Date().toISOString()}).eq('id',activeGameSession.id).select().single(); if(error) throw error;
+    activeGameSession=data; const i=_gamesCache.findIndex(g=>g.id===data.id); if(i>-1) _gamesCache[i]=data; renderActiveGame(); queueRenderGames();
+    document.getElementById('customQuestion').value=''; for(let k=1;k<=4;k++) document.getElementById('opt'+k).value=''; showPopup('Sent 🎲', q.slice(0,45), '🎲'); toast('Sent live');
+  }catch(e){ toast(e.message); }
+}
+async function answerGame(idx){
+  idx=parseInt(idx,10); if(!activeGameSession?.question){ toast('No Q'); return; } const opts=activeGameSession.options||[]; const answer=opts[idx]; if(!answer) return;
+  try{
+    const myName=getMyName(); const myId=getMyGameId(); const history=[...(activeGameSession.history||[])]; history.push({q:activeGameSession.question, opts:opts, a:answer, by:myName, by_id:myId, t:Date.now()});
+    const {data,error}=await supabaseClient.from('game_sessions').update({history:history, question:'', options:[], current_turn:'', updated_at:new Date().toISOString()}).eq('id',activeGameSession.id).select().single(); if(error) throw error;
+    activeGameSession=data; const i=_gamesCache.findIndex(g=>g.id===data.id); if(i>-1) _gamesCache[i]=data; renderActiveGame(); queueRenderGames(); showPopup('Answered 🔥', answer, '🔥');
+  }catch(e){ toast(e.message); }
+}
+function leaveGame(){ document.getElementById('activeGame').classList.add('hidden'); toast('Left view - still live'); }
+
+
+
+// Notifications - Polished + Clear fixed
+async function renderNotifs(){
+  const list=document.getElementById('notifList');
+  const badge=document.getElementById('notifBadge');
+  const navDot=document.getElementById('navNotifDot');
+  
+  if(!currentPair || !supabaseClient){
+    const notifs=JSON.parse(localStorage.getItem('notifications')||'[]');
+    const unread=notifs.filter(n=>!n.read).length;
+    if(badge){if(unread>0){badge.innerText=unread; badge.classList.remove('hidden'); badge.classList.add('flex');} else badge.classList.add('hidden');}
+    if(navDot){if(unread>0) navDot.classList.remove('hidden'); else navDot.classList.add('hidden');}
+    if(list) list.innerHTML=notifs.map(n=>`<div class="p-3 rounded-[14px] bg-white/60 border text-xs"><b>${n.title}</b><br>${n.text}<br><span class="text-[10px] opacity-50">${new Date(n.created_at||Date.now()).toLocaleString()}</span></div>`).join('')||'<p class="text-xs opacity-50 text-center py-8">No notifications yet</p>';
+    return;
+  }
+  
+  try{
+    const {data,error}=await supabaseClient.from('notifications').select('*').eq('pair_id',currentPair.id).order('created_at',{ascending:false}).limit(50);
+    if(error) throw error;
+    const count=data?.length||0;
+    if(badge){if(count>0){badge.innerText=count>9?'9+':count; badge.classList.remove('hidden'); badge.classList.add('flex');} else badge.classList.add('hidden');}
+    if(navDot){if(count>0) navDot.classList.remove('hidden'); else navDot.classList.add('hidden');}
+    if(list) list.innerHTML=(data||[]).map(n=>`<div class="p-3.5 rounded-[14px] bg-white border-l-4 border-[#FF4D6D] shadow-sm text-xs"><div class="flex justify-between"><b class="text-[12px]">${n.title}</b><span class="text-[10px] opacity-50">${new Date(n.created_at).toLocaleTimeString()}</span></div><p class="mt-1 leading-relaxed">${n.text}</p><p class="text-[10px] opacity-40 mt-1">${new Date(n.created_at).toLocaleString()}</p></div>`).join('')||'<div class="text-center py-12"><div class="text-4xl opacity-20">🔔</div><p class="text-xs opacity-50 mt-2">No notifications<br>Real-time popups will appear here</p></div>';
+  }catch(e){if(list) list.innerHTML=`<p class="text-xs text-red-500">Error: ${e.message}</p>`;}
+}
+async function clearNotifs(){
+  if(!confirm('Clear all notifications? This deletes from database permanently.')) return;
+  try{
+    // Clear localStorage first
+    localStorage.removeItem('notifications');
+    // Clear Supabase - FIXED
+    if(supabaseClient && currentPair){
+      const {error}=await supabaseClient.from('notifications').delete().eq('pair_id',currentPair.id);
+      if(error) throw error;
+    }
+    // Clear UI immediately
+    document.getElementById('notifList').innerHTML='<div class="text-center py-12"><div class="text-4xl">✨</div><p class="text-xs opacity-50 mt-2">Cleared! ✅</p></div>';
+    const badge=document.getElementById('notifBadge'); if(badge) badge.classList.add('hidden');
+    const navDot=document.getElementById('navNotifDot'); if(navDot) navDot.classList.add('hidden');
+    toast('Notifications cleared ✅ Fixed');
+    showPopup('Cleared 🧹', 'All notifications cleared', '✨');
+    setTimeout(()=>renderNotifs(),800);
+  }catch(e){toast('Error clearing: '+e.message); console.error(e);}
+}
+</script>
+</body>
+</html>
